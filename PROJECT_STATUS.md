@@ -231,3 +231,18 @@ application code; application code review and release acceptance remain pending.
 Prior verification records above describe checks run in the original application
 checkout. Formatting was checked again successfully in this recovered checkout.
 No deployment was performed during recovery.
+
+## Saraswathi Devi hero image — 15 October 2026
+
+Replaced the hero coming-soon placeholder with the user-selected second image:
+the Saraswathi Devi idol in pink floral surroundings. The original PNG is stored at
+public/images/saraswathi-devi.png. Responsive Next Image serving preloads the hero,
+preserves the complete composition with object-fit contain, and provides English
+and Telugu alternative text. No image generation, recolouring or source cropping
+is applied. The existing arch, invocation and blessing caption are retained.
+
+This Desktop checkout was attached to the existing origin/dev history without
+replacing working files. The remote Repository recovery notes are preserved.
+The four root Word document deletions visible locally are unrelated to this change
+and will not be included in the image commit.
+Validation: formatting, ESLint, TypeScript, 8 unit tests, production build and all 20 desktop/mobile browser checks passed. The supplied image loads in both languages with its complete composition visible. Commit and push to dev are authorised by the user; Vercel deployment verification follows the push.

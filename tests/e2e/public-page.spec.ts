@@ -257,3 +257,33 @@ test("committee photos and telephone links match the four supplied members in or
     await expect(page.locator("#donation")).toContainText("PINNINTI DINESH");
   }
 });
+
+test("hero displays the supplied Devi image without the coming-soon placeholder", async ({
+  page,
+}) => {
+  await page.goto("/");
+  for (const language of ["en", "te"] as const) {
+    await page
+      .getByRole("button", { name: language === "en" ? "EN" : "తెలుగు", exact: true })
+      .click();
+    const hero = page.locator("#home");
+    const image = hero.getByRole("img");
+    await expect(image).toHaveAttribute(
+      "alt",
+      language === "en" ? /Saraswathi Devi/ : /సరస్వతి దేవి/,
+    );
+    await expect
+      .poll(() =>
+        image.evaluate(
+          (node: HTMLImageElement) => node.complete && node.naturalWidth > 0,
+        ),
+      )
+      .toBe(true);
+    const source = await image.getAttribute("src");
+    expect(decodeURIComponent(source ?? "")).toContain("/images/saraswathi-devi.png");
+    await expect(image).toHaveCSS("object-fit", "contain");
+    await expect(hero).not.toContainText(
+      language === "en" ? "Devi image coming soon" : "అమ్మవారి చిత్రం త్వరలో",
+    );
+  }
+});

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { PROJECT } from "@/config/project";
 import {
@@ -337,17 +338,18 @@ export default function PublicPage() {
             </div>
           </div>
           <div className={styles.deviFrame}>
-            <span className={styles.deviOrnament} aria-hidden="true">
-              <Icon name="lotus" />
-            </span>
             <p className={styles.blessing} lang="te">
               ఓం శ్రీ సరస్వత్యై నమః
             </p>
-            <div className={styles.deviPlaceholder}>
-              <span className={styles.smallRule} />
-              <h2>{copy.imagePending}</h2>
-              <p>{copy.imageDescription}</p>
-            </div>
+            <Image
+              src="/images/saraswathi-devi.png"
+              alt={copy.imageAlt}
+              width={456}
+              height={817}
+              sizes="(max-width: 700px) 280px, 374px"
+              preload
+              className={styles.deviImage}
+            />
             <p className={styles.frameCaption}>
               <span aria-hidden="true">✦</span>
               {copy.blessing}

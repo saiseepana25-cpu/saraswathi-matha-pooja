@@ -1732,3 +1732,13 @@
     transform: none;
   }
 }
+
+.deviImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 540px;
+  object-fit: contain;
+  margin-inline: auto;
+  border-radius: 14px;
+}
