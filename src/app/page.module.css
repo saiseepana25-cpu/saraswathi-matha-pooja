@@ -1,0 +1,15 @@
+.main {
+  width: min(100% - 3rem, 52rem);
+  margin: 12vh auto;
+  line-height: 1.7;
+}
+
+.main h1 {
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  line-height: 1.2;
+}
+
+.label {
+  color: #803232;
+  font-weight: 700;
+}
