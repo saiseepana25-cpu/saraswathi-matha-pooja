@@ -1,7 +1,7 @@
 # Public page implementation
 
 This first increment implements the approved public design in the existing Next.js
-App Router application with CSS Modules. It is intentionally read-only and uses
+App Router application with CSS Modules. Visitors see published content and
 honest pending content until organiser-supplied information is available.
 
 ## Main files
@@ -21,8 +21,7 @@ search and date selection. Browser refresh does not preserve those two draft con
 The selected programme date also controls the puja and prasadam labels. Tab keyboard
 navigation uses Left/Right and Home/End. Only the selected date is a tab stop.
 
-The organiser entry opens a native modal describing the pending authentication
-feature. It accepts no credentials and makes no authentication or mutation requests.
+The organiser entry now opens the approved bilingual login dialog and calls private authentication endpoints. Programme, Daily Puja and Prasadam editing is now implemented for signed-in organisers; see SCHEDULE_IMPLEMENTATION.md.
 Escape closes the modal and focus returns to the initiating control.
 
 The three dates are 16–18 October 2026, with the main programme on 16 October. This organiser-confirmed correction supersedes the five-day dates in the original V1 Word documents. There are no fabricated

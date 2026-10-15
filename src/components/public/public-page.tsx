@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { ScheduleSections } from "@/components/schedule/schedule-sections";
+import { OrganiserAccess, useOrganiserAuth } from "@/components/auth/organiser-auth";
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { PROJECT } from "@/config/project";
 import {
@@ -86,10 +88,10 @@ export default function PublicPage() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const [moreOpen, setMoreOpen] = useState(false);
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const auth = useOrganiserAuth();
   const moreRef = useRef<HTMLDivElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
-  const lastFocusRef = useRef<HTMLElement | null>(null);
+
   const copy = publicCopy[language];
 
   useEffect(() => {
@@ -179,16 +181,6 @@ export default function PublicPage() {
     }
   }
 
-  function openOrganiserInfo() {
-    setMoreOpen(false);
-    lastFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    dialogRef.current?.showModal();
-  }
-
-  const selectedDate = `${selectedDay} ${copy.october} 2026`;
-  const mainDaySuffix = selectedDay === 16 ? ` · ${copy.mainDay}` : "";
-
   return (
     <div className={styles.page} data-language={language}>
       <a href="#main-content" className={styles.skipLink}>
@@ -249,15 +241,7 @@ export default function PublicPage() {
                 తెలుగు
               </button>
             </div>
-            <button
-              className={styles.signInButton}
-              type="button"
-              onClick={openOrganiserInfo}
-              aria-label={copy.signIn}
-            >
-              <Icon name="lock" />
-              <span>{copy.signInShort}</span>
-            </button>
+            <OrganiserAccess language={language} />
           </div>
         </div>
       </header>
@@ -400,77 +384,11 @@ export default function PublicPage() {
               </button>
             ))}
           </div>
-          <div
-            id="programme-panel"
-            role="tabpanel"
-            tabIndex={0}
-            aria-labelledby={`day-tab-${selectedDay}`}
-            className={styles.programmePanel}
-          >
-            <div className={styles.selectedDate}>
-              <span className={styles.squareIcon}>
-                <Icon name="calendar" />
-              </span>
-              <div aria-live="polite">
-                <h3>{selectedDate}</h3>
-                <p>
-                  {selectedDay === 16 ? copy.mainDay : `${copy.day} ${selectedDay - 15}`}
-                </p>
-              </div>
-            </div>
-            <EmptyState
-              icon="calendar"
-              title={copy.programmePending}
-              description={copy.programmePendingDescription}
-              compact
-            />
-          </div>
-          <div
-            id="puja-prasadam"
-            data-page-section
-            className={styles.devotionalGrid}
-            role="group"
-            aria-label={`${copy.pujaPrasadam} · ${selectedDate}`}
-          >
-            <article className={styles.devotionalCard}>
-              <div className={styles.cardTitle}>
-                <span className={styles.squareIcon}>
-                  <Icon name="sparkles" />
-                </span>
-                <div>
-                  <h3>{copy.pujaTitle}</h3>
-                  <p>
-                    {selectedDate}
-                    {mainDaySuffix}
-                  </p>
-                </div>
-              </div>
-              <div className={styles.devotionalEmpty}>
-                <Icon name="sparkles" />
-                <h4>{copy.pujaPending}</h4>
-                <p>{copy.pujaDescription}</p>
-              </div>
-            </article>
-            <article className={styles.devotionalCard}>
-              <div className={styles.cardTitle}>
-                <span className={styles.squareIcon}>
-                  <Icon name="bowl" />
-                </span>
-                <div>
-                  <h3>{copy.prasadamTitle}</h3>
-                  <p>
-                    {selectedDate}
-                    {mainDaySuffix}
-                  </p>
-                </div>
-              </div>
-              <div className={styles.devotionalEmpty}>
-                <Icon name="bowl" />
-                <h4>{copy.prasadamPending}</h4>
-                <p>{copy.prasadamDescription}</p>
-              </div>
-            </article>
-          </div>
+          <ScheduleSections
+            language={language}
+            selectedDay={selectedDay}
+            onDate={chooseDay}
+          />
         </section>
 
         <section
@@ -658,6 +576,21 @@ export default function PublicPage() {
               aria-label={copy.moreNavigation}
             >
               <p>{copy.moreNavigation}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setMoreOpen(false);
+                  if (auth.user) void auth.logout();
+                  else auth.openLogin();
+                }}
+              >
+                {auth.user
+                  ? language === "en"
+                    ? "Sign out"
+                    : "సైన్ అవుట్"
+                  : copy.signIn}
+              </button>
+              {auth.user && <p>{auth.user.username}</p>}
               {(["home", "pujaPrasadam", "donation", "committee", "venue"] as const).map(
                 (key) => (
                   <a
@@ -675,40 +608,6 @@ export default function PublicPage() {
         </div>
       </nav>
 
-      <dialog
-        ref={dialogRef}
-        className={styles.organiserDialog}
-        aria-labelledby="organiser-dialog-title"
-        aria-describedby="organiser-dialog-description"
-        onClose={() => lastFocusRef.current?.focus()}
-        onClick={(event) => {
-          if (event.target === dialogRef.current) dialogRef.current.close();
-        }}
-      >
-        <div className={styles.dialogInner}>
-          <button
-            type="button"
-            className={styles.dialogClose}
-            aria-label={copy.close}
-            onClick={() => dialogRef.current?.close()}
-          >
-            <Icon name="close" />
-          </button>
-          <span className={styles.iconDisc}>
-            <Icon name="lock" />
-          </span>
-          <h2 id="organiser-dialog-title">{copy.organiserPending}</h2>
-          <p id="organiser-dialog-description">{copy.organiserDescription}</p>
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={() => dialogRef.current?.close()}
-          >
-            {copy.gotIt}
-            <Icon name="arrow" />
-          </button>
-        </div>
-      </dialog>
       <span className={styles.srOnly}>{PROJECT.name}</span>
     </div>
   );

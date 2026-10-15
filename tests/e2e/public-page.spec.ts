@@ -1,4 +1,10 @@
+import { emptySchedule } from "../../src/lib/schedule";
 import { expect, test } from "@playwright/test";
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/schedule", (route) =>
+    route.fulfill({ json: { snapshot: emptySchedule() } }),
+  );
+});
 
 test("public sections show truthful pending content without sample records", async ({
   page,
@@ -85,15 +91,20 @@ test("announcement can be paused and reduced motion disables animation", async (
   await expect(page.locator("[data-paused]")).toHaveCSS("animation-name", "none");
 });
 
-test("organiser entry honestly explains the pending feature and restores focus", async ({
-  page,
-}) => {
+test("organiser entry shows the login form and restores focus", async ({ page }) => {
   await page.goto("/");
   const trigger = page.getByRole("button", { name: "Organiser sign in", exact: true });
   await trigger.click();
   await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.getByRole("dialog")).toContainText("Organiser access coming soon");
-  await expect(page.getByRole("dialog").getByRole("textbox")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toContainText(
+    "Sign in to manage festival information.",
+  );
+  await expect(
+    page.getByRole("dialog").getByLabel("Organiser account", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("dialog").getByLabel("Password", { exact: true }),
+  ).toHaveAttribute("type", "password");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(trigger).toBeFocused();

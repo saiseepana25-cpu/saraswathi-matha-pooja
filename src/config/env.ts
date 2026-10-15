@@ -8,21 +8,11 @@ const environmentSchema = z
       .string()
       .min(1)
       .refine((value) => /^mongodb(?:\+srv)?:\/\//.test(value)),
-    MONGODB_DB: z.enum(["saraswathi_puja", "saraswathi_puja_test"]),
+    MONGODB_DB: z.literal("saraswathi_puja"),
     VERCEL_ENV: z.enum(["development", "preview", "production"]).optional(),
   })
   .superRefine((env, context) => {
     const production = env.APP_ENV === "production";
-    const expectedDatabase = production ? "saraswathi_puja" : "saraswathi_puja_test";
-
-    if (env.MONGODB_DB !== expectedDatabase) {
-      context.addIssue({
-        code: "custom",
-        path: ["MONGODB_DB"],
-        message: "The selected database must match the application environment.",
-      });
-    }
-
     let origin: URL;
     try {
       origin = new URL(env.APP_ORIGIN);
@@ -51,8 +41,7 @@ const environmentSchema = z
       context.addIssue({
         code: "custom",
         path: ["APP_ENV"],
-        message:
-          "Preview deployments must use test data; production must use production data.",
+        message: "APP_ENV must match the Vercel deployment environment.",
       });
     }
   });

@@ -1,5 +1,10 @@
+import { OrganiserAuthProvider } from "@/components/auth/organiser-auth";
 import PublicPage from "@/components/public/public-page";
 
 export default function Home() {
-  return <PublicPage />;
+  return (
+    <OrganiserAuthProvider>
+      <PublicPage />
+    </OrganiserAuthProvider>
+  );
 }

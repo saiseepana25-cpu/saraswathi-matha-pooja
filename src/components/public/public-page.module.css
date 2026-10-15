@@ -1742,3 +1742,35 @@
   margin-inline: auto;
   border-radius: 14px;
 }
+
+/* Keep the complete portrait compact on phones without changing desktop sizing. */
+@media (max-width: 700px) {
+  .deviFrame {
+    width: calc(min(320px, 45svh) * 456 / 817 + 32px);
+    min-width: 0;
+    border-radius: 50% 50% 14px 14px / 70px 70px 14px 14px;
+    max-width: 100%;
+    border-width: 6px;
+    padding: 32px 10px 16px;
+  }
+
+  .deviImage {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(320px, 45svh);
+    border-radius: 10px;
+  }
+
+  .deviFrame .blessing {
+    margin-bottom: 12px;
+  }
+
+  .deviFrame .frameCaption {
+    min-width: 0;
+    gap: 6px;
+    overflow-wrap: anywhere;
+    margin-top: 14px;
+    margin-bottom: 0;
+    line-height: 1.6;
+  }
+}

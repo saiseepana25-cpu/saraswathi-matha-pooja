@@ -5,17 +5,17 @@ const local = {
   APP_ENV: "development",
   APP_ORIGIN: "http://localhost:3000",
   MONGODB_URI: "mongodb://localhost:27017",
-  MONGODB_DB: "saraswathi_puja_test",
+  MONGODB_DB: "saraswathi_puja",
 };
 
-describe("database environment isolation", () => {
-  it("allows local development against the dedicated test database", () => {
-    expect(parseServerEnvironment(local).MONGODB_DB).toBe("saraswathi_puja_test");
+describe("database environment configuration", () => {
+  it("allows local development against the shared application database", () => {
+    expect(parseServerEnvironment(local).MONGODB_DB).toBe("saraswathi_puja");
   });
 
-  it("rejects the production database during development", () => {
+  it("rejects the former test database", () => {
     expect(() =>
-      parseServerEnvironment({ ...local, MONGODB_DB: "saraswathi_puja" }),
+      parseServerEnvironment({ ...local, MONGODB_DB: "saraswathi_puja_test" }),
     ).toThrow();
   });
 
@@ -25,7 +25,7 @@ describe("database environment isolation", () => {
     ).toThrow();
   });
 
-  it("rejects production credentials selected for a Vercel preview", () => {
+  it("rejects a production environment selected for a Vercel preview", () => {
     expect(() =>
       parseServerEnvironment({
         ...local,
@@ -54,7 +54,7 @@ describe("database environment isolation", () => {
     );
   });
 
-  it("accepts an isolated production environment", () => {
+  it("accepts production against the same application database", () => {
     expect(
       parseServerEnvironment({
         ...local,

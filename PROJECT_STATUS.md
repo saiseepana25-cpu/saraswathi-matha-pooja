@@ -4,26 +4,24 @@ Last updated: 15 October 2026.
 
 ## Current milestone
 
-Public page implementation from the approved Stitch design. Application path:
+Public page, organiser authentication and Programme, Daily Puja and Prasadam section editing are implemented and code-reviewed. Application path:
 `C:\Users\HP\OneDrive\Desktop\saraswathi devi pooja\saraswathi-matha-pooja`.
 
 Workflow for each increment: design, design review, implementation, user code review,
 testing and fixes, status update, commit and push, deployment and deployment verification.
 
-The public page uses explicit local pending content for this first increment. It does
-not read or write MongoDB or represent the contribution list as an empty database result.
-Real content and protected publishing will be connected in later increments.
+The public page includes the supplied devotional image, donation details, committee and venue, plus MongoDB-backed schedule reads and protected section publishing. Chandas and gallery management remain pending; missing content is never represented as sample records or a failed-read zero total. The current summary supersedes the historical increment notes below.
 
 ## Milestones
 
-| Increment                                | Design   | Implementation | Review              | Verification                             | Deployment   |
-| ---------------------------------------- | -------- | -------------- | ------------------- | ---------------------------------------- | ------------ |
-| Public page and pending content          | Approved | Complete       | User review pending | Passed: build, 8 unit + 12 browser tests | Not deployed |
-| Organiser sign-in and sessions           | Pending  | Not started    | Not started         | Not started                              | Not deployed |
-| Shared inline section editing            | Pending  | Not started    | Not started         | Not started                              | Not deployed |
-| Chandas management and persistence       | Pending  | Not started    | Not started         | Not started                              | Not deployed |
-| Remaining content management             | Pending  | Not started    | Not started         | Not started                              | Not deployed |
-| Image processing and gallery publication | Pending  | Not started    | Not started         | Not started                              | Not deployed |
+| Increment                                             | Implementation             | Review             | Verification                                    | Deployment   |
+| ----------------------------------------------------- | -------------------------- | ------------------ | ----------------------------------------------- | ------------ |
+| Public page and supplied content                      | Complete for current scope | Passed             | Production build; prior public browser coverage | Not verified |
+| Organiser sign-in and absolute sessions               | Complete                   | Passed after fixes | Unit and focused browser regressions passed     | Not verified |
+| Shared editing for Programme, Daily Puja and Prasadam | Complete                   | Passed             | Prior 46 browser checks; current 56 unit tests  | Not verified |
+| Chandas management and persistence                    | Not started                | Pending            | Pending                                         | Not deployed |
+| Remaining content editors                             | Not started                | Pending            | Pending                                         | Not deployed |
+| Gallery upload and publication                        | Not started                | Pending            | Pending                                         | Not deployed |
 
 ## Public page scope
 
@@ -34,7 +32,7 @@ Real content and protected publishing will be connected in later increments.
 - Three programme dates (16–18 October 2026; main programme 16 October) and synchronized puja/prasadam date labels.
 - Truthful household, total, timestamp, payment, committee, venue and gallery pending states.
 - Household search input retains its text across language changes; actual filtering awaits real records.
-- Organiser entry explains that authentication is pending; it does not collect credentials or grant access.
+- Organiser sign-in, sign-out, three-hour sessions and draft-aware schedule editing are implemented.
 - Local font packages; visitors do not request fonts from Google.
 
 ## Design reference
@@ -72,26 +70,22 @@ Completed on 15 October 2026:
 Local preview: `http://localhost:3000`. It uses the existing development server in
 this application checkout. No production deployment has been performed.
 
-User code/design review and release acceptance remain pending. Automated Chromium
-coverage does not replace checking real phones or Safari before release.
+The current code review found no actionable issues after the authentication fixes. Manual real-account, real-phone and Safari acceptance remains pending.
 
 Browser tests are in `tests/e2e/public-page.spec.ts`; they do not contact Atlas.
 
 ## Pending content
 
-- Approved Devi image and final welcome text.
+- Final welcome text review; the approved Devi image is supplied.
 - Reviewed English and Telugu household names.
-- Verified payment QR and linked mobile number; cash instructions.
+- Cash contribution instructions and manual real-device QR/recipient confirmation.
 - Programme timings, puja details and prasadam information.
-- Committee members and roles.
-- Confirmed venue, bilingual address and Google Maps link.
+- Venue photograph and manual verification of the supplied Maps destination.
 - Gallery photos when available. An empty gallery and pending Annadanam are valid launch states.
 
 ## Release state
 
-No commit, push or deployment is part of this implementation turn. User code review
-and the agreed testing stage precede those actions. Production launch checks include
-real-content review, database isolation and backup validation when persistence is connected.
+Code review and the current automated checks are complete. The user authorised committing and pushing the reviewed changes to dev. Deployment verification remains separate and has not been performed. Root DOCX deletions are unrelated and excluded from this application commit. Private credentials and generated files remain Git-ignored.
 
 ## Donation information increment — 15 October 2026
 
@@ -246,3 +240,175 @@ replacing working files. The remote Repository recovery notes are preserved.
 The four root Word document deletions visible locally are unrelated to this change
 and will not be included in the image commit.
 Validation: formatting, ESLint, TypeScript, 8 unit tests, production build and all 20 desktop/mobile browser checks passed. The supplied image loads in both languages with its complete composition visible. Commit and push to dev are authorised by the user; Vercel deployment verification follows the push.
+
+## Shared Atlas database configuration — 15 October 2026
+
+The user chose one database, saraswathi_puja, for local development and production.
+Environment validation, the example configuration, README and unit tests now reflect
+that decision. Unrelated database names are rejected; production HTTPS and Vercel
+environment checks remain in place. Local saved changes will affect shared data
+once persistence is implemented. Automated unit tests do not contact Atlas.
+
+Validation: formatting, ESLint, TypeScript and all 8 environment unit tests passed.
+.env.local is Git-ignored and was not printed or modified. Read-only diagnostics
+confirmed Atlas DNS and all three database ports are reachable. Atlas subsequently
+returned code 8000 with an authentication failure. The connection is not yet verified;
+the user needs to check the puja_app password/URI encoding in .env.local.
+No database records were created or changed, and no commit, push or deployment occurred.
+Organiser provisioning, login and section editors remain pending.
+
+## Organiser account setup — 15 October 2026
+
+Implemented npm run organizer:setup as a private interactive terminal command.
+It loads .env.local, connects to the user-selected shared saraswathi_puja database,
+and writes only organisers. The account has fixed _id primary, schemaVersion 1,
+a normalised username, enabled flag, timestamps and the document-approved salted
+scrypt password object. Username login and organisers collection follow the user's
+confirmed setup flow and supersede the original email/admin_accounts naming.
+
+Passwords and confirmation are read without echo, command arguments, pipe input,
+logs or environment storage. Validation requires a 3–32-character username and a
+15–128-character password; cancellation and mismatch do not start provisioning.
+Existing accounts, including disabled or legacy records, are not overwritten.
+Concurrent first runs contend on MongoDB's unique primary ID. Acknowledged majority
+writes are required; ambiguous failures are never reported as success.
+
+Validation: npm run check passed (formatting, ESLint, TypeScript and all 20 tests).
+The production build passed. A real Windows terminal smoke test verified hidden
+input and clean exit, using a disposable phrase without database access. Unit tests
+cover hash verification, unique salts, malformed hashes, credential validation,
+repeat and concurrent provisioning, write failures, hidden input and cancellation.
+The help command was checked without connecting to Atlas. Automated tests made no
+Atlas writes. The user previously confirmed db:check succeeded after updating their
+credentials; the earlier authentication blocker is resolved by that verification.
+
+The actual organiser account has not been created by the agent. The user should run
+npm run organizer:setup privately in the Desktop project terminal. Login/session UI,
+protected APIs and Programme/Daily Puja/Prasadam editors remain the next increments.
+A password-reset procedure is not implemented in this step. No commit, push or
+deployment was performed; unrelated root Word-document deletions remain untouched.
+
+## Organiser password length adjustment — 15 October 2026
+
+The user requested passwords of 8–15 characters, including special characters.
+Updated provisioning validation, password verification length bounds, private
+terminal input limits, setup prompts and README. Special characters are accepted
+as typed and hashed directly; organiser passwords must not be URL-encoded.
+Password salting and scrypt parameters are unchanged. Unit cases exercise the
+8/15-character boundaries, 7/16-character rejection and special-character hashing.
+No organiser account or Atlas records were created or modified by this change.
+
+## Organiser login and absolute sessions — 15 October 2026
+
+The user confirmed successful account creation through the private setup command.
+Implemented the reviewed English/Telugu login dialog, accessible password visibility,
+validation/loading/errors, header identity, Sign out, mobile More access and
+session-expiry reauthentication. Existing public content and design remain intact.
+
+Added private login/session/logout endpoints. Login verifies the provisioned scrypt
+hash, uses generic credential failures, bounds request bodies, and limits attempts
+through shared MongoDB buckets before hashing. Sessions store only token digests,
+expire at an absolute three-hour deadline, and rotate on reauthentication. Production
+cookies use Secure, SameSite=Strict and the __Host prefix with an HttpOnly session
+cookie and separate CSRF cookie. Local HTTP has development-only cookie names.
+Mutations check the configured Origin; logout also checks the CSRF header.
+The requireOrganiser helper checks expiry, CSRF cookie and enabled account state.
+Protected editor endpoints must apply it and the mutation guards in the next step.
+TTL indexes are created on first sign-in; TTL cleanup never substitutes for expiry
+checks. Session responses are private/no-store. Browser tokens are not stored in
+localStorage. Stale session responses cannot undo a completed login or logout.
+
+Validation: formatting, ESLint, TypeScript, 34 unit tests, production build and
+all 30 desktop/mobile browser checks passed. Tests cover the authentication boundary,
+fixed expiry, rate denial, cookie flags, bounded input, missing/disabled accounts,
+mocked login/logout, validation/network states, mobile language layout and existing
+public features. Tests did not create records in the shared Atlas database or use
+the real organiser password. OneDrive read-only flags were cleared only within
+the verified generated .next/server/app/api directory to unblock rebuilding.
+
+Manual real-account sign-in remains for the user. The existing local development
+server was detected on port 3000 and left running. The in-app browser was on a
+browser-generated error page and its security policy blocked inspection; no browser
+workaround was attempted. Automated Playwright checks above completed independently.
+
+Programme, Daily Puja and Prasadam editors, draft-aware sign-out confirmation and
+password reset remain pending. Vercel production environment configuration and
+deployment are not yet performed. No commit or push; unrelated root DOCX deletions
+remain untouched.
+
+## Compact mobile Devi portrait — 15 October 2026
+
+Adjusted only the max-width 700px hero image rules: the arch is capped at 280px,
+with lighter borders and tighter spacing; the complete portrait is contained at
+up to 320px high (45svh on short screens). Desktop rules remain unchanged.
+Verified the running local app at 440x956 and 360x800, including English and Telugu:
+image height 320px, no horizontal overflow, full portrait visible, and programme
+content follows sooner. At desktop 1440px the original 440px frame, 70px top padding
+and 540px image maximum remain. CSS formatting and diff checks passed. No database
+changes, commit, push or deployment. Preview saved in the system temp directory.
+
+## Three organiser schedule editors and tighter mobile portrait — 15 October 2026
+
+Implemented Programme details, Daily puja and Prasadam editors across the fixed
+16–18 October 2026 dates, using the reviewed bilingual public/editing design.
+Authenticated organisers can add/remove/reorder entries, set English/Telugu names,
+confirmed or unconfirmed timing and paired optional notes. Each section has its own
+Edit, Save and Cancel; one Save publishes that section's three dates atomically.
+Puja entries can inherit names/times from same-day published programme events.
+Linked programme removal is blocked until the puja links are removed.
+
+Added public GET and protected PUT /api/schedule with same-origin, CSRF, enabled
+organiser and absolute-session checks before schedule writes. Strict validation,
+independent section revisions, atomic global compare-and-swap and bounded retry
+receipts protect against invalid links, stale overwrites and duplicate retries.
+Combined request/document size is bounded at 2 MB. The aggregate lives in
+content_sections/_id schedule, superseding the original separate programme and
+puja/prasadam document layout to keep linked-event checks atomic. Public responses
+exclude private retry/account/session information. Missing records remain pending;
+public reads never seed samples. See docs/SCHEDULE_IMPLEMENTATION.md.
+
+Drafts remain in memory across dates, language changes, failed saves and session
+expiry. Reauthentication does not automatically publish. Conflicts require explicit
+review; Cancel and sign-out confirm before discarding dirty drafts. Sign-out waits
+for pending saves, and failed logout keeps drafts. Public data refreshes on focus
+and every 60 seconds; delayed responses cannot replace newer section revisions.
+
+The mobile Devi frame now hugs the full portrait with roughly 16px on each side
+including its border. The arch/caption adapt to the narrower width, the complete
+photo stays visible at up to 320px/45svh height, and desktop image sizing is unchanged.
+The running 360px English/Telugu preview was visually checked. Mobile editor field
+layout and touch controls were also inspected from the browser-test screenshot.
+
+Validation: formatting, ESLint, TypeScript and all 51 unit tests passed. Production
+build passed and all 46 desktop/mobile browser checks passed, covering save/refresh,
+all-date drafts, separate sections, linked inheritance, validation/network retry,
+session expiry/reauthentication, discard/sign-out, conflicts and mobile layouts.
+Automated tests use memory/mocked storage and did not create Atlas records or use
+the real organiser password. OneDrive read-only flags were cleared only within the
+verified generated API build directory to permit rebuilding.
+
+The user should complete private real-account sign-in and mobile acceptance with
+real event/puja/prasadam details. Local and production share saraswathi_puja by the
+user's choice. Password reset, Chandas management, gallery uploads and remaining
+content editors are pending. This change is local: no commit, push or deployment.
+The existing dev server remains running and unrelated root DOCX deletions remain
+untouched.
+
+## Authentication review fixes and commit readiness — 15 October 2026
+
+Fixed both actionable findings from the earlier review:
+
+- Session GET probes no longer set or expire cookies, preventing a delayed expired-session response from erasing a newer login.
+- Password entry enforces the same 15-Unicode-code-point maximum as provisioning, while allowing the corresponding 30 UTF-16 code units. Valid emoji passwords are submitted without truncation.
+
+Added five session-route regression tests, including out-of-order responses, and a browser regression for eight- and fifteen-emoji passwords and the character limit.
+
+Verification after these fixes:
+
+- Formatting, ESLint and TypeScript passed.
+- All 56 unit tests passed.
+- Production build passed.
+- Both focused Unicode-password browser checks passed on desktop and mobile Chromium. The complete browser suite was not rerun after these two fixes; its prior 46 checks are recorded above.
+- A subsequent independent read-only review against the supplied base, including untracked authentication and schedule files, reported no actionable issues.
+
+The user approved commit and push to dev after status verification. This entry records readiness; remote push confirmation is reported by the Git operation, not assumed here. No real organiser credentials or Atlas data were changed during these fixes. The unrelated root Word-document deletions are excluded.
