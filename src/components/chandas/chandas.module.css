@@ -43,7 +43,7 @@
 }
 .summary {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.2fr 1fr 1fr;
   gap: 16px;
   margin: 20px 0;
 }
@@ -68,6 +68,43 @@
   font-size: 12px;
   line-height: 1.8;
   color: #776260;
+}
+.summary > .totalCard {
+  min-width: 0;
+  background: linear-gradient(135deg, #581329, #742139);
+  border-color: #b48540;
+  color: #fff9ef;
+}
+.totalCard h3 {
+  margin: 0;
+  color: #ffe0a4;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.8;
+}
+.summary .totalCard .totalValue {
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.summary .totalCard p {
+  color: #fff0e1;
+  margin-bottom: 0;
+}
+.summary .totalCard .totalDraftHelp {
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid #f7d69a55;
+  color: #ffe0a4;
+}
+@media (min-width: 701px) and (max-width: 1000px) {
+  .summary {
+    grid-template-columns: 1fr 1fr;
+  }
+  .summary > .totalCard {
+    grid-column: 1 / -1;
+  }
 }
 .container button,
 .dialog button {

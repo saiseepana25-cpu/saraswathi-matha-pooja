@@ -92,3 +92,26 @@ Original photographs are local assets under public/committee. Next Image provide
 responsive serving, while CSS frames the portraits without changing source files.
 The component has no role fields, member administration, mutation routes or database
 access. Browser tests verify image/name/telephone pairings in both languages.
+
+## Confirmed bilingual announcement schedule — 16 October 2026
+
+The existing horizontal banner now scrolls English and Telugu together, independent
+of the website language. Both events are announced immediately: Annadanam on
+Saturday, 17 October at 12:00 noon IST and Saraswathi Nimajjanam on Sunday,
+18 October at 5:00 PM IST. At 18 October 2026 00:00 IST (17 October 18:30 UTC),
+Annadanam is removed and only Nimajjanam remains. At 19 October 2026 00:00 IST
+(18 October 18:30 UTC), midnight ending the 18th, the entire banner disappears.
+
+The client uses the explicit IST boundary, schedules a check at the changeover,
+and rechecks when the tab becomes visible or focused. Already-open pages switch
+without a reload, even when scrolling is paused. Pause/Resume remains intact.
+The duplicate loop copy is hidden from assistive technology; reduced-motion users
+see both messages as readable static text. The banner initially waits for the
+browser clock to avoid serving an expired date from cached build-time HTML.
+
+This revised schedule supersedes the earlier indefinite Nimajjanam announcement.
+Expiry also removes the controls and banner space. It does not add an organiser announcement editor,
+change festival programme records or write to MongoDB.
+
+The schedule and bilingual text are in src/lib/announcements.ts. Existing public
+layout and navigation are preserved. Validation passed: formatting, ESLint, TypeScript, all 124 unit tests, production build and all 30 public-page desktop/mobile browser checks. Clock tests cover exact IST midnight, an open paused banner, tab refocus, a non-India browser timezone and reduced-motion readability. No database writes, commit, push or deployment were performed.

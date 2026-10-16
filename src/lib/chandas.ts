@@ -155,3 +155,14 @@ export function duplicateHouseholdIds(rows: Pick<Household, "id" | "name">[]) {
     [...groups.values()].filter((ids) => ids.size > 1).flatMap((ids) => [...ids]),
   );
 }
+
+// Derive only from a complete published snapshot. BigInt keeps whole-rupee sums exact.
+export function collectedChandasRupees(rows: readonly Household[]): bigint {
+  return rows.reduce(
+    (sum, row) =>
+      row.contribution.type === "money"
+        ? sum + BigInt(row.contribution.amountRupees)
+        : sum,
+    0n,
+  );
+}

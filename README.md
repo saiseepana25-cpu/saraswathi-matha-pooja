@@ -153,8 +153,9 @@ storage, validation, conflict handling and manual acceptance checks.
 
 Chandas now reads saved household names/contributions from MongoDB. Visitors can
 search both English/Telugu names, sort by original order or name and filter by
-Pending, rupee ranges or Vigraham. Lists render 30 results per page. No collected
-money total is displayed.
+Pending, rupee ranges or Vigraham. Lists render 30 results per page. One public
+Total amount collected card sums all saved Chandas Money amounts, excluding Pending,
+Vigraham and separate donations. Filters and unsaved edits do not alter the total.
 
 After organiser sign-in, Edit Chandas provides one draft across all pages. Edit
 both names, record a positive whole-rupee cumulative amount, select Vigraham or

@@ -172,16 +172,25 @@ export function CelebrationGallery({ language }: { language: Language }) {
       requestGeneration.current++;
     };
   }, [load]);
-  const abandon = useCallback(async (id: string) => {
+  const abandon = useCallback(async (id: string, required = false) => {
     try {
-      await fetch("/api/gallery/batches/" + id, {
+      const response = await fetch("/api/gallery/batches/" + id, {
         method: "DELETE",
         headers: { "X-CSRF-Token": csrfCookie() },
       });
-    } catch {
+      if (required && !response.ok) throw new Error("Batch cleanup failed");
+    } catch (error) {
+      if (required) throw error;
       /* Private staging expires for later safe maintenance. */
     }
   }, []);
+  const beforeLogout = useCallback(async () => {
+    if (job.current?.batchAttempted) {
+      await abandon(job.current.batchId, true);
+      // A failed logout can still retry this draft with a fresh batch.
+      job.current = null;
+    }
+  }, [abandon]);
   const discard = useCallback(() => {
     if (job.current?.batchAttempted) void abandon(job.current.batchId);
     release();
@@ -193,8 +202,9 @@ export function CelebrationGallery({ language }: { language: Language }) {
     setUncertain(false);
   }, [abandon, release]);
   useEffect(
-    () => registerDraft("gallery", { dirty, busy: busy || uncertain, discard }),
-    [registerDraft, dirty, busy, uncertain, discard],
+    () =>
+      registerDraft("gallery", { dirty, busy: busy || uncertain, discard, beforeLogout }),
+    [registerDraft, dirty, busy, uncertain, discard, beforeLogout],
   );
   useEffect(() => {
     if (!viewer) return;

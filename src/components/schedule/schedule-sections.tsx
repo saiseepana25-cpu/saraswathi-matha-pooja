@@ -750,7 +750,9 @@ export function ScheduleSections({
   };
   const date = "2026-10-" + selectedDay;
   const selectedDate = selectedDay + " " + copy.october + " 2026";
-  const suffix = selectedDay === 16 ? " · " + copy.mainDay : "";
+  const specialDay =
+    selectedDay === 16 ? copy.mainDay : selectedDay === 18 ? copy.nimajjanamDay : "";
+  const suffix = specialDay ? " · " + specialDay : "";
   const props = { language, date, onDate, snapshot, onPublished: publish, state };
   return (
     <>
@@ -775,9 +777,7 @@ export function ScheduleSections({
           </span>
           <div aria-live="polite">
             <h3>{selectedDate}</h3>
-            <p>
-              {selectedDay === 16 ? copy.mainDay : copy.day + " " + (selectedDay - 15)}
-            </p>
+            <p>{specialDay || copy.day + " " + (selectedDay - 15)}</p>
           </div>
         </div>
         <EditableSection section="programme" {...props} />

@@ -18,9 +18,15 @@ the contribution has not yet been recorded on the website.
 Filters: All, Pending, 50–99, 100–199, 200–299, 300–399, 400–499, 500–999,
 1,000–1,999, 2,000+ and Vigraham. Values remain exact: 101, 501 and 1,100 are neither
 rounded nor replaced by bucket labels. Any positive amount below 50 remains visible
-in All; there is no invented minimum contribution. No total collected, saved-money
-total or projected money total is displayed or calculated. Only household counts
-and the last successfully changed timestamp are shown.
+in All; there is no invented minimum contribution. A public, read-only total now
+adds the exact saved Money amounts across all households. Pending, Vigraham and
+separate QR/cash donations are excluded. Search, sorting, filters and pagination
+do not change the total. Draft changes, Cancel and failed saves do not change it;
+a successful Save publishes the new total with the saved list. There is no manual
+or projected draft total. Loading and unavailable states never fabricate zero.
+Whole-rupee summation uses BigInt so the 1,000-household maximum cannot lose precision.
+The total is derived from the complete published snapshot; no aggregate field or
+database migration is needed. This supersedes the previous no-total product rule.
 
 ## Ordered editing and drafts
 

@@ -32,7 +32,12 @@ test("public sections show truthful pending content without sample records", asy
   await expect(
     page.locator("#chandas").getByText("Not updated yet", { exact: true }),
   ).toBeVisible();
-  await expect(page.locator("#chandas")).not.toContainText("₹0");
+  await expect(
+    page
+      .locator("#chandas")
+      .getByRole("region", { name: "Total amount collected", exact: true })
+      .getByRole("status"),
+  ).toHaveText("₹0");
   await expect(page.getByRole("link", { name: /Google Maps/ })).toHaveCount(0);
   await expect(page.locator("#gallery img")).toHaveCount(0);
 });
@@ -312,4 +317,126 @@ test.beforeEach(async ({ page }) => {
   await page.route("**/api/gallery", (route) =>
     route.fulfill({ json: { snapshot: { items: [], revision: 0, updatedAt: null } } }),
   );
+});
+
+test.describe("confirmed bilingual announcements", () => {
+  test.use({ timezoneId: "America/Los_Angeles" });
+  test("both events scroll in both languages independently of the website language", async ({
+    page,
+  }) => {
+    await page.clock.install({ time: new Date("2026-10-17T12:00:00+05:30") });
+    await page.goto("/");
+    const banner = page.getByRole("complementary", {
+      name: "Festival announcements",
+      exact: true,
+    });
+    await expect(banner.locator('[lang="en"]').first()).toHaveText(
+      "Annadanam: Saturday, 17 October 2026, at 12:00 noon IST. • Saraswathi Nimajjanam: Sunday, 18 October 2026, at 5:00 PM IST.",
+    );
+    await expect(banner.locator('[lang="te"]').first()).toHaveText(
+      "అన్నదానం: శనివారం, 17 అక్టోబర్ 2026 మధ్యాహ్నం 12 గంటలకు. • సరస్వతీ దేవి నిమజ్జన కార్యక్రమం: ఆదివారం, 18 అక్టోబర్ 2026 సాయంత్రం 5 గంటలకు.",
+    );
+    await expect(banner).not.toContainText("will be announced shortly");
+    await page.getByRole("button", { name: "తెలుగు", exact: true }).click();
+    const telugu = page.getByRole("complementary", {
+      name: "ఉత్సవ ప్రకటనలు",
+      exact: true,
+    });
+    await expect(telugu.locator('[lang="en"]').first()).toBeAttached();
+    await expect(telugu.locator('[lang="te"]').first()).toBeAttached();
+    expect(await telugu.locator('[aria-hidden="true"]').count()).toBeGreaterThan(0);
+  });
+  test("an open paused banner changes automatically at midnight IST without reloading", async ({
+    page,
+  }) => {
+    await page.clock.install({ time: new Date("2026-10-17T18:29:00Z") });
+    await page.goto("/");
+    await expect(
+      page.getByRole("complementary", { name: "Festival announcements", exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Pause announcement", exact: true }).click();
+    await page.clock.fastForward(60_000);
+    const banner = page.getByRole("complementary", {
+      name: "Nimajjanam announcement",
+      exact: true,
+    });
+    await expect(banner).toBeVisible();
+    await expect(banner).not.toContainText("Annadanam:");
+    await expect(banner.locator('[lang="en"]').first()).toHaveText(
+      "Saraswathi Nimajjanam: Sunday, 18 October 2026, at 5:00 PM IST.",
+    );
+    await expect(banner.locator('[lang="te"]').first()).toHaveText(
+      "సరస్వతీ దేవి నిమజ్జన కార్యక్రమం: ఆదివారం, 18 అక్టోబర్ 2026 సాయంత్రం 5 గంటలకు.",
+    );
+    await expect(banner.locator("[data-paused]")).toHaveAttribute("data-paused", "true");
+    await page.getByRole("button", { name: "Resume announcement", exact: true }).click();
+    await expect(banner.locator("[data-paused]")).toHaveAttribute("data-paused", "false");
+  });
+  test("returning to a tab after the deadline refreshes immediately and fresh visits show Nimajjanam", async ({
+    page,
+  }) => {
+    await page.clock.install({ time: new Date("2026-10-17T18:20:00Z") });
+    await page.goto("/");
+    await expect(
+      page.getByRole("complementary", { name: "Festival announcements", exact: true }),
+    ).toBeVisible();
+    await page.clock.setSystemTime(new Date("2026-10-18T10:00:00+05:30"));
+    await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await expect(
+      page.getByRole("complementary", { name: "Nimajjanam announcement", exact: true }),
+    ).toBeVisible();
+    await page.reload();
+    const banner = page.getByRole("complementary", {
+      name: "Nimajjanam announcement",
+      exact: true,
+    });
+    await expect(banner).toBeVisible();
+    await expect(banner).not.toContainText("Annadanam:");
+    await page.setViewportSize({ width: 360, height: 800 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+    ).toBe(true);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(banner.locator("[data-paused]")).toHaveCSS("animation-name", "none");
+    await expect(banner.locator('[lang="en"]').first()).toHaveCSS("display", "block");
+    await expect(banner.locator('[lang="te"]').first()).toHaveCSS("display", "block");
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+    ).toBe(true);
+  });
+  test("the whole paused banner disappears at midnight ending 18 October IST", async ({
+    page,
+  }) => {
+    await page.clock.install({ time: new Date("2026-10-18T18:29:00Z") });
+    await page.goto("/");
+    const banner = page.getByRole("complementary", {
+      name: "Nimajjanam announcement",
+      exact: true,
+    });
+    await expect(banner).toBeVisible();
+    await page.getByRole("button", { name: "Pause announcement", exact: true }).click();
+    await page.clock.fastForward(60_000);
+    await expect(banner).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /(?:Pause|Resume) announcement/ }),
+    ).toHaveCount(0);
+  });
+  test("expired announcements stay hidden on a fresh visit and after returning to a tab", async ({
+    page,
+  }) => {
+    await page.clock.install({ time: new Date("2026-10-18T22:00:00+05:30") });
+    await page.goto("/");
+    await expect(
+      page.getByRole("complementary", { name: "Nimajjanam announcement", exact: true }),
+    ).toBeVisible();
+    await page.clock.setSystemTime(new Date("2026-10-19T00:00:00+05:30"));
+    await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await expect(page.getByRole("complementary")).toHaveCount(0);
+    await page.reload();
+    await expect(page.locator("#home")).toBeVisible();
+    await expect(page.getByRole("complementary")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /(?:Pause|Resume) announcement/ }),
+    ).toHaveCount(0);
+  });
 });

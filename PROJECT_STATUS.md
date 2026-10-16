@@ -10,7 +10,7 @@ Public page, organiser authentication and Programme, Daily Puja and Prasadam sec
 Workflow for each increment: design, design review, implementation, user code review,
 testing and fixes, status update, commit and push, deployment and deployment verification.
 
-The public page includes the supplied devotional image, donation details, committee and venue, plus MongoDB-backed schedule reads and protected section publishing. Chandas management and celebration gallery management are implemented and reviewed. One gallery sign-out cleanup issue is explicitly deferred by the user to the next deployment; see the commit-readiness entry below. Missing content is never replaced by sample records, and Chandas displays no collected-money total. The current summary supersedes the historical increment notes below.
+The public page includes the supplied devotional image, donation details, committee and venue, plus MongoDB-backed schedule reads and protected section publishing. Chandas management and celebration gallery management are implemented and reviewed. The previously deferred gallery sign-out cleanup issue is now fixed locally for the next deployment; see the latest entry below. Missing content is never replaced by sample records, and Chandas now shows a public read-only total of saved household money contributions. The current summary supersedes the historical increment notes below.
 
 ## Milestones
 
@@ -21,7 +21,7 @@ The public page includes the supplied devotional image, donation details, commit
 | Shared editing for Programme, Daily Puja and Prasadam | Complete                   | Passed             | Prior 46 browser checks; current 56 unit tests             | Not verified |
 | Chandas management and persistence                    | Complete locally           | Reviewed           | 115 unit tests; prior Chandas browser checks; build passed | Not deployed |
 | Remaining content editors                             | Not started                | Pending            | Pending                                                    | Not deployed |
-| Gallery upload and publication                        | Complete locally           | One issue deferred | 115 unit tests; 22 gallery browser checks; build passed    | Not deployed |
+| Gallery upload and publication                        | Complete locally           | Fixed locally      | 115 unit tests; 22 gallery browser checks; build passed    | Not deployed |
 
 ## Public page scope
 
@@ -481,3 +481,42 @@ Verification after this fix: formatting, ESLint, TypeScript, all 115 unit tests,
 The subsequent independent read-only review found one remaining issue: Sign out → Discard changes revokes authentication before protected gallery batch abandonment. After failed uploads, this can leave batches occupying both staging slots until their 24-hour expiry. The user explicitly accepted deferring this fix to the next deployment. Until fixed, use gallery Cancel before signing out. Public viewing is unaffected by this issue.
 
 The user authorized committing and pushing the current implementation to dev with this known issue deferred. Push success is confirmed separately by the Git operation. Deployment and real organiser upload acceptance remain unverified. The four unrelated root DOCX deletions are excluded from this commit.
+
+## Gallery sign-out cleanup fix — 16 October 2026
+
+Following the user-reported production deployment, fixed the previously deferred issue locally. Sign-out now awaits protected gallery batch abandonment before revoking authentication. Local drafts are discarded only after successful logout. Cleanup failure leaves the session and draft intact; logout failure after cleanup retains local photo selections and resets the upload job so a subsequent Save creates fresh staging. Ordinary gallery Cancel keeps its existing best-effort cleanup behavior.
+
+Added desktop/mobile browser regressions for delayed successful abandonment, cleanup failure and logout failure, including saving retained selections after failure. No live database writes, commit, push or deployment were performed for this fix. Verification: formatting, ESLint and TypeScript passed; production build passed; all 102 desktop/mobile Chromium browser checks passed, including six new sign-out regression cases. All 115 unit tests passed on an isolated rerun. A concurrent run had one existing password-hashing test exceed its 15-second timeout; no test timeout or credential implementation was changed. The initial unit run also passed all 115 tests. Tests used mocked/in-memory content.
+
+## Public Chandas collected total — 16 October 2026
+
+Implemented the reviewed single burgundy/gold Total amount collected card above search/filters, with English/Telugu labels and responsive layout. It derives the exact whole-rupee sum from all saved Money household contributions. Pending, Vigraham and separate QR/cash donations are excluded. BigInt avoids precision loss at the supported maximum. No new database field or migration is needed. Search, filters, sorting, pagination and unsaved edits do not change the saved total; successful Save updates it. Loading/unavailable states never fabricate zero; genuinely empty/non-money saved lists show zero. No manual total or projected draft total is introduced.
+
+This supersedes earlier historical entries that prohibited monetary totals. Existing optional second-language name validation remains unchanged. Formatting, lint, TypeScript, all 118 unit tests and production build passed; all 52 focused Chandas/public desktop/mobile browser checks passed. Desktop and 360px Telugu total-card screenshots were visually verified with mocked data. No commit, push, deployment or live database writes were performed for this change.
+
+## Confirmed bilingual announcement schedule — 16 October 2026
+
+The existing horizontal banner now scrolls English and Telugu together, independent
+of the website language. Both events are announced immediately: Annadanam on
+Saturday, 17 October at 12:00 noon IST and Saraswathi Nimajjanam on Sunday,
+18 October at 5:00 PM IST. At 18 October 2026 00:00 IST (17 October 18:30 UTC),
+Annadanam is removed and only Nimajjanam remains. At 19 October 2026 00:00 IST
+(18 October 18:30 UTC), midnight ending the 18th, the entire banner disappears.
+
+The client uses the explicit IST boundary, schedules a check at the changeover,
+and rechecks when the tab becomes visible or focused. Already-open pages switch
+without a reload, even when scrolling is paused. Pause/Resume remains intact.
+The duplicate loop copy is hidden from assistive technology; reduced-motion users
+see both messages as readable static text. The banner initially waits for the
+browser clock to avoid serving an expired date from cached build-time HTML.
+
+This revised schedule supersedes the earlier indefinite Nimajjanam announcement.
+Expiry also removes the controls and banner space. It does not add an organiser announcement editor,
+change festival programme records or write to MongoDB.
+
+The schedule and bilingual text are in src/lib/announcements.ts. Existing public
+layout and navigation are preserved. Validation passed: formatting, ESLint, TypeScript, all 124 unit tests, production build and all 30 public-page desktop/mobile browser checks. Clock tests cover exact IST midnight, an open paused banner, tab refocus, a non-India browser timezone and reduced-motion readability. No database writes, commit, push or deployment were performed.
+
+## Nimajjanam day label — 16 October 2026
+
+18 October is labelled “Nimajjanam day” / “నిమజ్జనం రోజు” beneath the date tab and in the selected schedule details, including puja/prasadam date context. Existing date-card styling is preserved.

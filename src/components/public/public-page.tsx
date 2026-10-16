@@ -6,6 +6,11 @@ import { Chandas } from "@/components/chandas/chandas";
 import { ScheduleSections } from "@/components/schedule/schedule-sections";
 import { OrganiserAccess, useOrganiserAuth } from "@/components/auth/organiser-auth";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  announcementAt,
+  announcementCheckDelay,
+  type FestivalAnnouncement,
+} from "@/lib/announcements";
 import { PROJECT } from "@/config/project";
 import {
   isLanguage,
@@ -62,6 +67,7 @@ export default function PublicPage() {
   const [selectedDay, setSelectedDay] = useState<number>(16);
 
   const [paused, setPaused] = useState(false);
+  const [announcement, setAnnouncement] = useState<FestivalAnnouncement | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const [moreOpen, setMoreOpen] = useState(false);
@@ -95,6 +101,28 @@ export default function PublicPage() {
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
+
+  useEffect(() => {
+    let timer: number | undefined;
+    const refresh = () => {
+      const now = Date.now();
+      setAnnouncement(announcementAt(now));
+      window.clearTimeout(timer);
+      timer = window.setTimeout(refresh, announcementCheckDelay(now));
+    };
+    const frame = requestAnimationFrame(refresh);
+    const visible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", visible);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", visible);
+    };
+  }, []);
 
   useEffect(() => {
     const elements = document.querySelectorAll<HTMLElement>("[data-page-section]");
@@ -224,33 +252,55 @@ export default function PublicPage() {
       </header>
 
       <main id="main-content" tabIndex={-1}>
-        <aside className={styles.announcement} aria-label={copy.announcementLabel}>
-          <div className={styles.announcementInner}>
-            <span className={styles.announcementLabel}>
-              <span className={styles.dot} />
-              {copy.announcementLabel}
-            </span>
-            <div className={styles.marqueeViewport}>
-              <p className={styles.marquee} data-paused={paused || reducedMotion}>
-                {copy.announcement}
-                <span className={styles.marqueeOrnament} aria-hidden="true">
-                  ✦
-                </span>
-                <span aria-hidden="true">{copy.announcement}</span>
-              </p>
+        {announcement && (
+          <aside
+            className={styles.announcement}
+            aria-label={announcement.label[language]}
+          >
+            <div className={styles.announcementInner}>
+              <span className={styles.announcementLabel}>
+                <span className={styles.dot} />
+                {announcement.label[language]}
+              </span>
+              <div className={styles.marqueeViewport}>
+                <p
+                  key={announcement.id}
+                  className={styles.marquee}
+                  data-paused={paused || reducedMotion}
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {[false, true].map((duplicate) => (
+                    <span
+                      key={String(duplicate)}
+                      className={styles.marqueeGroup}
+                      aria-hidden={duplicate || undefined}
+                    >
+                      <span lang="en">{announcement.message.en}</span>
+                      <span className={styles.marqueeOrnament} aria-hidden="true">
+                        ✦
+                      </span>
+                      <span lang="te">{announcement.message.te}</span>
+                      <span className={styles.marqueeOrnament} aria-hidden="true">
+                        ✦
+                      </span>
+                    </span>
+                  ))}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.pauseButton}
+                onClick={() => setPaused((value) => !value)}
+                aria-label={paused ? copy.resumeAnnouncement : copy.pauseAnnouncement}
+                aria-pressed={paused}
+              >
+                <Icon name={paused ? "play" : "pause"} />
+                <span>{paused ? copy.resume : copy.pause}</span>
+              </button>
             </div>
-            <button
-              type="button"
-              className={styles.pauseButton}
-              onClick={() => setPaused((value) => !value)}
-              aria-label={paused ? copy.resumeAnnouncement : copy.pauseAnnouncement}
-              aria-pressed={paused}
-            >
-              <Icon name={paused ? "play" : "pause"} />
-              <span>{paused ? copy.resume : copy.pause}</span>
-            </button>
-          </div>
-        </aside>
+          </aside>
+        )}
 
         <section
           id="home"
@@ -356,7 +406,11 @@ export default function PublicPage() {
                   {day} <span>{copy.octoberShort}</span>
                 </strong>
                 <span className={styles.dayCaption}>
-                  {day === 16 ? copy.mainDay : `${copy.day} ${index + 1}`}
+                  {day === 16
+                    ? copy.mainDay
+                    : day === 18
+                      ? copy.nimajjanamDay
+                      : `${copy.day} ${index + 1}`}
                 </span>
               </button>
             ))}

@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   browseHouseholds,
+  collectedChandasRupees,
+  MAX_RUPEES,
   CHANDAS_PAGE_SIZE,
   duplicateHouseholdIds,
   emptyChandas,
@@ -241,5 +243,30 @@ describe("Chandas atomic publication", () => {
     };
     await expect(saveChandas(db.store, input())).rejects.toThrow("unavailable");
     expect(db.document()).toBe(null);
+  });
+});
+
+describe("Published Chandas collected amount", () => {
+  it("adds exact Money amounts and excludes Pending and Vigraham", () => {
+    const rows = [
+      row("A", { type: "money", amountRupees: 101 }),
+      row("B", { type: "money", amountRupees: 501 }),
+      row("C", { type: "money", amountRupees: 1100 }),
+      row("D"),
+      row("E", { type: "vigraham" }),
+    ];
+    expect(collectedChandasRupees(rows)).toBe(1702n);
+    expect(rows[0].contribution).toEqual({ type: "money", amountRupees: 101 });
+  });
+  it("returns a genuine zero for empty and non-money lists", () => {
+    expect(collectedChandasRupees([])).toBe(0n);
+    expect(collectedChandasRupees([row(), row("Idol", { type: "vigraham" })])).toBe(0n);
+  });
+  it("preserves exact integer totals beyond the Number safe-integer limit", () => {
+    const rows = Array.from({ length: 1000 }, () =>
+      row("A", { type: "money", amountRupees: MAX_RUPEES }),
+    );
+    expect(collectedChandasRupees(rows)).toBe(BigInt(MAX_RUPEES) * 1000n);
+    expect(collectedChandasRupees(rows) > BigInt(Number.MAX_SAFE_INTEGER)).toBe(true);
   });
 });

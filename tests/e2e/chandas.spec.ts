@@ -120,7 +120,7 @@ async function edit(page: Page) {
   await section(page).getByRole("button", { name: "Edit Chandas", exact: true }).click();
 }
 
-test("public pagination, search, range filters and sorting use the full list without collected totals", async ({
+test("public pagination, search, filters and sorting preserve the full-list collected total", async ({
   page,
   context,
   baseURL,
@@ -130,9 +130,12 @@ test("public pagination, search, range filters and sorting use the full list wit
   await expect(
     section(page).getByRole("button", { name: "Edit Chandas", exact: true }),
   ).toHaveCount(0);
-  await expect(section(page)).not.toContainText(
-    /total collected|overall recorded|after saving/i,
-  );
+  const total = section(page).getByRole("region", {
+    name: "Total amount collected",
+    exact: true,
+  });
+  await expect(total).toHaveCount(1);
+  await expect(total.getByRole("status")).toHaveText("₹602");
   await section(page).getByRole("button", { name: "Page 5", exact: true }).click();
   await expect(rows(page)).toHaveCount(10);
   await expect(rows(page).first()).toContainText("#121");
@@ -158,6 +161,7 @@ test("public pagination, search, range filters and sorting use the full list wit
   await section(page).getByLabel("Sort by", { exact: true }).selectOption("desc");
   await expect(rows(page).first()).toContainText("Soman");
   await expect(rows(page).first()).toContainText("#2");
+  await expect(total.getByRole("status")).toHaveText("₹602");
 });
 
 test("all-page edits survive language and browsing changes and publish together", async ({
@@ -558,4 +562,138 @@ test.beforeEach(async ({ page }) => {
   await page.route("**/api/gallery", (route) =>
     route.fulfill({ json: { snapshot: { items: [], revision: 0, updatedAt: null } } }),
   );
+});
+
+test("published total stays fixed through drafts and failed saves, then reflects saved corrections, Vigraham and removals", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  const control = await setup(page, context, baseURL!);
+  const total = section(page).getByRole("region", {
+    name: "Total amount collected",
+    exact: true,
+  });
+  await expect(total.getByRole("status")).toHaveText("₹602");
+  await edit(page);
+  await rows(page)
+    .nth(2)
+    .getByLabel("Amount (whole rupees) *", { exact: true })
+    .fill("701");
+  await expect(total.getByRole("status")).toHaveText("₹602");
+  await expect(total).toContainText("Total updates after Save Chandas succeeds.");
+  control.fail = "network";
+  await section(page).getByRole("button", { name: "Save Chandas", exact: true }).click();
+  await expect(
+    section(page).getByRole("button", { name: "Retry Save", exact: true }),
+  ).toBeVisible();
+  await expect(total.getByRole("status")).toHaveText("₹602");
+  await section(page).getByRole("button", { name: "Retry Save", exact: true }).click();
+  await expect(total.getByRole("status")).toHaveText("₹1,202");
+  await edit(page);
+  await rows(page)
+    .nth(3)
+    .getByLabel("Contribution type", { exact: true })
+    .selectOption("vigraham");
+  await page
+    .getByRole("dialog", { name: "Confirm change", exact: true })
+    .getByRole("button", { name: "Confirm", exact: true })
+    .click();
+  await expect(total.getByRole("status")).toHaveText("₹1,202");
+  await section(page).getByRole("button", { name: "Save Chandas", exact: true }).click();
+  await expect(total.getByRole("status")).toHaveText("₹701");
+  await edit(page);
+  await rows(page)
+    .nth(2)
+    .getByRole("button", { name: "Remove household #3", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Confirm change", exact: true })
+    .getByRole("button", { name: "Confirm", exact: true })
+    .click();
+  await expect(total.getByRole("status")).toHaveText("₹701");
+  await section(page).getByRole("button", { name: "Save Chandas", exact: true }).click();
+  await expect(total.getByRole("status")).toHaveText("₹0");
+});
+test("one global total survives search, ranges, pagination, language switching and Cancel on 360px", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  await setup(page, context, baseURL!);
+  await page.setViewportSize({ width: 360, height: 800 });
+  const total = section(page).getByRole("region", {
+    name: "Total amount collected",
+    exact: true,
+  });
+  await section(page).getByRole("button", { name: "Page 5", exact: true }).click();
+  await expect(total.getByRole("status")).toHaveText("₹602");
+  await section(page).getByRole("searchbox").fill("Household 129");
+  await expect(total.getByRole("status")).toHaveText("₹602");
+  await section(page).getByRole("button", { name: "Clear filters", exact: true }).click();
+  await section(page)
+    .getByLabel("Contribution filter", { exact: true })
+    .selectOption("500-999");
+  await expect(total.getByRole("status")).toHaveText("₹602");
+  await section(page)
+    .getByLabel("Contribution filter", { exact: true })
+    .selectOption("pending");
+  await expect(total.getByRole("status")).toHaveText("₹602");
+  await section(page)
+    .getByLabel("Contribution filter", { exact: true })
+    .selectOption("vigraham");
+  await expect(total.getByRole("status")).toHaveText("₹602");
+  await section(page).getByRole("button", { name: "Clear filters", exact: true }).click();
+  await edit(page);
+  await rows(page)
+    .nth(2)
+    .getByLabel("Amount (whole rupees) *", { exact: true })
+    .fill("9999");
+  await section(page).getByRole("button", { name: "Cancel", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Discard all unsaved Chandas changes?", exact: true })
+    .getByRole("button", { name: "Discard changes", exact: true })
+    .click();
+  await expect(total.getByRole("status")).toHaveText("₹602");
+  await page.getByRole("button", { name: "తెలుగు", exact: true }).click();
+  const telugu = section(page).getByRole("region", {
+    name: "మొత్తం వసూలైన చందాలు",
+    exact: true,
+  });
+  await expect(telugu).toHaveCount(1);
+  await expect(telugu.getByRole("status")).toHaveText("₹602");
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+  ).toBe(true);
+});
+test("total loading and read failure never display a fabricated zero", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  const control = await setup(page, context, baseURL!);
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let fail = true;
+  await page.route("**/api/chandas", async (route) => {
+    await gate;
+    return fail
+      ? route.fulfill({ status: 503, json: { error: "unavailable" } })
+      : route.fulfill({ json: { snapshot: control.current() } });
+  });
+  await page.reload();
+  const total = section(page).getByRole("region", {
+    name: "Total amount collected",
+    exact: true,
+  });
+  await expect(total.getByRole("status")).toHaveText("Loading total…");
+  await expect(total).not.toContainText("₹0");
+  release();
+  await expect(total.getByRole("status")).toHaveText("Total unavailable");
+  await expect(total).not.toContainText("₹0");
+  fail = false;
+  await section(page).getByRole("button", { name: "Retry", exact: true }).click();
+  await expect(total.getByRole("status")).toHaveText("₹602");
 });

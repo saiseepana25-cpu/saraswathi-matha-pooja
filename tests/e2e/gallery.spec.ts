@@ -521,3 +521,77 @@ test("lost batch creation responses do not exhaust staging after Cancel", async 
   expect(control.uploadBodies).toHaveLength(1);
   expect(control.current().items).toHaveLength(2);
 });
+
+for (const failure of ["none", "cleanup", "logout"] as const) {
+  test(
+    "sign-out awaits gallery cleanup and preserves drafts on " + failure + " failure",
+    async ({ page, context, baseURL }) => {
+      const control = await setup(page, context, baseURL!, 1);
+      const events: string[] = [];
+      let fail: string = failure;
+      await page.route("**/api/gallery/batches/*", async (route) => {
+        if (route.request().method() !== "DELETE") return route.fallback();
+        expect(control.signedIn).toBe(true);
+        expect(route.request().headers()["x-csrf-token"]).toBe("c".repeat(64));
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        events.push("cleanup");
+        return route.fulfill({
+          status: fail === "cleanup" ? 503 : 200,
+          json: { abandoned: true },
+        });
+      });
+      await page.route("**/api/auth/logout", async (route) => {
+        events.push("logout");
+        expect(events[0]).toBe("cleanup");
+        if (fail === "logout")
+          return route.fulfill({ status: 503, json: { error: "unavailable" } });
+        control.signedIn = false;
+        await context.clearCookies();
+        return route.fulfill({ json: { user: null } });
+      });
+      await edit(page);
+      await select(page, await portrait());
+      control.fail = "upload";
+      await section(page)
+        .getByRole("button", { name: "Save gallery", exact: true })
+        .click();
+      await expect(section(page).getByRole("alert")).toContainText(
+        "could not be confirmed",
+      );
+      await page.getByRole("button", { name: "Sign out", exact: true }).click();
+      const dialog = page.getByRole("dialog", {
+        name: "Sign out and discard changes?",
+        exact: true,
+      });
+      await dialog
+        .getByRole("button", { name: "Discard changes and sign out", exact: true })
+        .click();
+      if (failure !== "none") {
+        await expect(dialog.getByRole("alert")).toContainText("Unable to connect");
+        expect(control.signedIn).toBe(true);
+        expect(events).toEqual(
+          failure === "cleanup" ? ["cleanup"] : ["cleanup", "logout"],
+        );
+        await dialog.getByRole("button", { name: "Keep editing", exact: true }).click();
+        await expect(
+          section(page).getByRole("button", { name: "Save gallery", exact: true }),
+        ).toBeVisible();
+        fail = "none";
+        await section(page)
+          .getByRole("button", { name: "Save gallery", exact: true })
+          .click();
+        await expect(
+          section(page).getByText("Gallery saved and published.", { exact: true }),
+        ).toBeVisible();
+        expect(control.current().items).toHaveLength(2);
+      } else {
+        await expect(
+          page.getByRole("button", { name: "Organiser sign in", exact: true }),
+        ).toBeVisible();
+        expect(events).toEqual(["cleanup", "logout"]);
+        expect(control.saves).toHaveLength(0);
+        expect(control.current().items).toHaveLength(1);
+      }
+    },
+  );
+}

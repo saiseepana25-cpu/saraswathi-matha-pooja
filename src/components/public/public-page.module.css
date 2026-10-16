@@ -1774,3 +1774,33 @@
     line-height: 1.6;
   }
 }
+
+.marqueeGroup {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    width: auto;
+    display: block;
+  }
+  .marqueeGroup {
+    display: block;
+    white-space: normal;
+  }
+  .marqueeGroup[aria-hidden="true"] {
+    display: none;
+  }
+  .marqueeGroup > span[lang] {
+    display: block;
+    line-height: 1.8;
+  }
+  .marqueeGroup > .marqueeOrnament {
+    display: none;
+  }
+  .marqueeViewport {
+    overflow: visible;
+  }
+}

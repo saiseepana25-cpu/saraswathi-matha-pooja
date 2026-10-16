@@ -16,6 +16,13 @@ import styles from "./organiser-auth.module.css";
 
 type User = { username: string; expiresAt: string };
 type View = "login" | "expired" | "discard" | null;
+type DraftGuard = {
+  dirty: boolean;
+  busy: boolean;
+  discard: () => void;
+  beforeLogout?: () => Promise<void>;
+};
+
 type AuthContextValue = {
   user: User | null;
   checking: boolean;
@@ -27,10 +34,7 @@ type AuthContextValue = {
   refresh: () => Promise<void>;
   login: (username: string, password: string) => Promise<string | null>;
   logout: (discard?: boolean) => Promise<void>;
-  registerDraft: (
-    key: string,
-    guard: { dirty: boolean; busy: boolean; discard: () => void },
-  ) => () => void;
+  registerDraft: (key: string, guard: DraftGuard) => () => void;
 };
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -126,18 +130,13 @@ export function OrganiserAuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState("");
   const current = useRef<User | null>(null);
   const generation = useRef(0);
-  const draftGuards = useRef(
-    new Map<string, { dirty: boolean; busy: boolean; discard: () => void }>(),
-  );
-  const registerDraft = useCallback(
-    (key: string, guard: { dirty: boolean; busy: boolean; discard: () => void }) => {
-      draftGuards.current.set(key, guard);
-      return () => {
-        draftGuards.current.delete(key);
-      };
-    },
-    [],
-  );
+  const draftGuards = useRef(new Map<string, DraftGuard>());
+  const registerDraft = useCallback((key: string, guard: DraftGuard) => {
+    draftGuards.current.set(key, guard);
+    return () => {
+      draftGuards.current.delete(key);
+    };
+  }, []);
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
       if ([...draftGuards.current.values()].some((guard) => guard.dirty || guard.busy)) {
@@ -247,6 +246,10 @@ export function OrganiserAuthProvider({ children }: { children: ReactNode }) {
       if (!csrf) {
         await refresh();
         return;
+      }
+      // Finish protected cleanup while cookies are valid; retain drafts until logout succeeds.
+      for (const guard of draftGuards.current.values()) {
+        await guard.beforeLogout?.();
       }
       const response = await fetch("/api/auth/logout", {
         method: "POST",

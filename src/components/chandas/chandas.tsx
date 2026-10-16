@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { csrfCookie, useOrganiserAuth } from "@/components/auth/organiser-auth";
 import {
   browseHouseholds,
+  collectedChandasRupees,
   CHANDAS_PAGE_SIZE,
   contributionFilters,
   duplicateHouseholdIds,
@@ -506,6 +507,27 @@ export function Chandas({ language }: { language: Language }) {
           {text.pendingHelp}
         </p>
         <div className={styles.summary}>
+          <div
+            className={styles.totalCard}
+            role="region"
+            aria-labelledby="chandas-total-label"
+          >
+            <h3 id="chandas-total-label">{text.total}</h3>
+            <strong className={styles.totalValue} role="status">
+              {state === "ready"
+                ? new Intl.NumberFormat(language === "te" ? "te-IN" : "en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  }).format(collectedChandasRupees(snapshot.households))
+                : state === "loading"
+                  ? text.totalLoading
+                  : text.totalUnavailable}
+            </strong>
+            <p>{text.totalHelp}</p>
+            {draft && <p className={styles.totalDraftHelp}>{text.totalDraftHelp}</p>}
+          </div>
           <div>
             <span>{text.households}</span>
             <strong>{state === "ready" ? snapshot.households.length : "—"}</strong>
