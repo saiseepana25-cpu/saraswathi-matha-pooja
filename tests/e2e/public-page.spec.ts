@@ -1,3 +1,4 @@
+import { emptyChandas } from "../../src/lib/chandas";
 import { emptySchedule } from "../../src/lib/schedule";
 import { expect, test } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
@@ -27,8 +28,10 @@ test("public sections show truthful pending content without sample records", asy
   await expect(
     page.getByText("Household list coming soon", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("Not yet available", { exact: true })).toBeVisible();
-  await expect(page.getByText("Not updated yet", { exact: true })).toBeVisible();
+  await expect(page.locator("#chandas")).not.toContainText("Overall recorded total");
+  await expect(
+    page.locator("#chandas").getByText("Not updated yet", { exact: true }),
+  ).toBeVisible();
   await expect(page.locator("#chandas")).not.toContainText("₹0");
   await expect(page.getByRole("link", { name: /Google Maps/ })).toHaveCount(0);
   await expect(page.locator("#gallery img")).toHaveCount(0);
@@ -297,4 +300,16 @@ test("hero displays the supplied Devi image without the coming-soon placeholder"
       language === "en" ? "Devi image coming soon" : "అమ్మవారి చిత్రం త్వరలో",
     );
   }
+});
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/chandas", (route) =>
+    route.fulfill({ json: { snapshot: emptyChandas() } }),
+  );
+});
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/gallery", (route) =>
+    route.fulfill({ json: { snapshot: { items: [], revision: 0, updatedAt: null } } }),
+  );
 });

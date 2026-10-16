@@ -1,3 +1,4 @@
+import { emptyChandas } from "../../src/lib/chandas";
 import { expect, test, type Page, type BrowserContext } from "@playwright/test";
 import {
   emptySchedule,
@@ -325,4 +326,16 @@ test("automatic session expiry preserves unsaved entries until reauthentication"
     "Timer retained draft",
   );
   expect(control.saves).toHaveLength(0);
+});
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/chandas", (route) =>
+    route.fulfill({ json: { snapshot: emptyChandas() } }),
+  );
+});
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/gallery", (route) =>
+    route.fulfill({ json: { snapshot: { items: [], revision: 0, updatedAt: null } } }),
+  );
 });

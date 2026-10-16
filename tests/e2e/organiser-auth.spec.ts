@@ -1,3 +1,4 @@
+import { emptyChandas } from "../../src/lib/chandas";
 import { emptySchedule } from "../../src/lib/schedule";
 import { expect, test } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
@@ -187,4 +188,16 @@ test("sign-in accepts provisionable Unicode passwords without UTF-16 truncation"
   }
   await password.pressSequentially("a".repeat(15) + "b");
   await expect(password).toHaveValue("a".repeat(15));
+});
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/chandas", (route) =>
+    route.fulfill({ json: { snapshot: emptyChandas() } }),
+  );
+});
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/gallery", (route) =>
+    route.fulfill({ json: { snapshot: { items: [], revision: 0, updatedAt: null } } }),
+  );
 });

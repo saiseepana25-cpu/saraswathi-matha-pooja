@@ -149,6 +149,22 @@ Only a successful authenticated Save changes shared schedule data; public reads 
 not create records or seed sample content. See docs/SCHEDULE_IMPLEMENTATION.md for
 storage, validation, conflict handling and manual acceptance checks.
 
+## Chandas household contributions
+
+Chandas now reads saved household names/contributions from MongoDB. Visitors can
+search both English/Telugu names, sort by original order or name and filter by
+Pending, rupee ranges or Vigraham. Lists render 30 results per page. No collected
+money total is displayed.
+
+After organiser sign-in, Edit Chandas provides one draft across all pages. Edit
+both names, record a positive whole-rupee cumulative amount, select Vigraham or
+Pending, add/insert households and confirm removal. New households start Pending.
+A position preview explains how subsequent serial numbers shift; stable UUIDs keep
+contributions attached to the correct household. One Save publishes the full list;
+Cancel restores it. Drafts survive browsing and reauthentication, with explicit
+retry/conflict review. No example households are seeded into the shared database.
+See docs/CHANDAS_IMPLEMENTATION.md for rules, persistence and acceptance checks.
+
 ## Development commands
 
 | Command              | Purpose                                     |
@@ -229,3 +245,7 @@ marks that major deprecated; upgrading it independently to 10 creates invalid
 peer dependencies. Upgrade the complete lint toolchain together when supported.
 
 Reference: [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm).
+
+## Celebration gallery
+
+The organiser can add/remove up to 60 photos with one Save/Cancel. Visitors see 12 photos at a time and can enlarge them. JPEG, PNG and WebP originals up to 7 MB are supported; larger-than-3 MB images are optimised before upload. Main/preview bytes persist privately in MongoDB until gallery publication. See docs/GALLERY_IMPLEMENTATION.md for the routes, recovery rules, storage budgets and private gallery:cleanup command. No sample photos are seeded.

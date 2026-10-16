@@ -1,6 +1,6 @@
 # Rittapadu Saraswathi Puja project status
 
-Last updated: 15 October 2026.
+Last updated: 16 October 2026.
 
 ## Current milestone
 
@@ -10,18 +10,18 @@ Public page, organiser authentication and Programme, Daily Puja and Prasadam sec
 Workflow for each increment: design, design review, implementation, user code review,
 testing and fixes, status update, commit and push, deployment and deployment verification.
 
-The public page includes the supplied devotional image, donation details, committee and venue, plus MongoDB-backed schedule reads and protected section publishing. Chandas and gallery management remain pending; missing content is never represented as sample records or a failed-read zero total. The current summary supersedes the historical increment notes below.
+The public page includes the supplied devotional image, donation details, committee and venue, plus MongoDB-backed schedule reads and protected section publishing. Chandas management and celebration gallery management are implemented and reviewed. One gallery sign-out cleanup issue is explicitly deferred by the user to the next deployment; see the commit-readiness entry below. Missing content is never replaced by sample records, and Chandas displays no collected-money total. The current summary supersedes the historical increment notes below.
 
 ## Milestones
 
-| Increment                                             | Implementation             | Review             | Verification                                    | Deployment   |
-| ----------------------------------------------------- | -------------------------- | ------------------ | ----------------------------------------------- | ------------ |
-| Public page and supplied content                      | Complete for current scope | Passed             | Production build; prior public browser coverage | Not verified |
-| Organiser sign-in and absolute sessions               | Complete                   | Passed after fixes | Unit and focused browser regressions passed     | Not verified |
-| Shared editing for Programme, Daily Puja and Prasadam | Complete                   | Passed             | Prior 46 browser checks; current 56 unit tests  | Not verified |
-| Chandas management and persistence                    | Not started                | Pending            | Pending                                         | Not deployed |
-| Remaining content editors                             | Not started                | Pending            | Pending                                         | Not deployed |
-| Gallery upload and publication                        | Not started                | Pending            | Pending                                         | Not deployed |
+| Increment                                             | Implementation             | Review             | Verification                                               | Deployment   |
+| ----------------------------------------------------- | -------------------------- | ------------------ | ---------------------------------------------------------- | ------------ |
+| Public page and supplied content                      | Complete for current scope | Passed             | Production build; prior public browser coverage            | Not verified |
+| Organiser sign-in and absolute sessions               | Complete                   | Passed after fixes | Unit and focused browser regressions passed                | Not verified |
+| Shared editing for Programme, Daily Puja and Prasadam | Complete                   | Passed             | Prior 46 browser checks; current 56 unit tests             | Not verified |
+| Chandas management and persistence                    | Complete locally           | Reviewed           | 115 unit tests; prior Chandas browser checks; build passed | Not deployed |
+| Remaining content editors                             | Not started                | Pending            | Pending                                                    | Not deployed |
+| Gallery upload and publication                        | Complete locally           | One issue deferred | 115 unit tests; 22 gallery browser checks; build passed    | Not deployed |
 
 ## Public page scope
 
@@ -31,7 +31,7 @@ The public page includes the supplied devotional image, donation details, commit
 - Annadanam announcement with Pause/Resume and reduced-motion handling.
 - Three programme dates (16–18 October 2026; main programme 16 October) and synchronized puja/prasadam date labels.
 - Truthful household, total, timestamp, payment, committee, venue and gallery pending states.
-- Household search input retains its text across language changes; actual filtering awaits real records.
+- Household search filters all saved records and retains its text across language changes; real household names remain a content input.
 - Organiser sign-in, sign-out, three-hour sessions and draft-aware schedule editing are implemented.
 - Local font packages; visitors do not request fonts from Google.
 
@@ -412,3 +412,72 @@ Verification after these fixes:
 - A subsequent independent read-only review against the supplied base, including untracked authentication and schedule files, reported no actionable issues.
 
 The user approved commit and push to dev after status verification. This entry records readiness; remote push confirmation is reported by the Git operation, not assumed here. No real organiser credentials or Atlas data were changed during these fixes. The unrelated root Word-document deletions are excluded.
+
+## Chandas household editing — 16 October 2026
+
+Implemented the approved desktop/mobile Chandas design in the Desktop Git project.
+Public browsing supports 30 matching households per page, bilingual name search,
+original-order/name ascending/name descending sorting, Pending, amount ranges and
+Vigraham filters. Actual amounts are never rounded into bucket labels. Long names
+wrap and non-money badges appear below names on narrow screens. No collected,
+saved or projected aggregate money total is displayed or calculated.
+
+The signed-in organiser can edit both household names, record a positive whole-rupee
+cumulative amount, choose Pending/Vigraham, add or insert at an original-list position,
+and confirm removals/type changes. New entries start Pending with blank names.
+Insertion previews the displaced household; stable UUIDs preserve contributions
+while subsequent serial numbers shift. One Save/Cancel covers the complete list.
+Drafts survive browsing, language changes and session expiry. Retry and explicit
+conflict review protect drafts and prevent silent overwrites. Existing sign-out
+and unload guards cover Chandas along with the schedule editors.
+
+Added public GET and protected PUT /api/chandas, strict validation and an atomic
+chandas/current aggregate with revision checking, internal write serialization,
+majority writes and bounded operation receipts. Limits follow the V1 safeguards:
+1,000 households, 120 Unicode code points per name and 2 MB requests/documents.
+The latest product decisions amend the original amountPaise/totalPaise schema:
+Money uses whole amountRupees, Vigraham/Pending carry no money value and no aggregate
+monetary total is stored. No legacy paise-data migration is included. Public reads
+never create records; technical receipts contain no old household data.
+
+Validation: formatting, ESLint, TypeScript, all 93 unit tests, production build and
+all 72 desktop/mobile Chromium browser checks passed. Browser tests include 24
+Chandas checks for 130-household pagination, full-list search/filtering, amount
+boundaries, whole-list saves, stable insertion, contribution-type confirmation,
+validation/retry identity, Cancel/sign-out, conflicts, expiry/reauthentication,
+read failures and 360px bilingual layout. Visual review of the generated mobile
+household and editor screenshots confirmed readable names and status placement.
+All test accounts/content are mocked or in-memory; no test Atlas writes occurred.
+
+The updated app is running at http://localhost:3000/#chandas for user review.
+Initial real bilingual household names remain a content input; fictional Stitch
+or browser-fixture names were not seeded. Real-account mobile Save acceptance and
+user code review remain pending. No commit, push or deployment. The four pre-existing
+root DOCX deletions remain untouched. See docs/CHANDAS_IMPLEMENTATION.md for the
+storage amendment, editor rules and manual acceptance steps.
+
+Read-only local API verification also passed against the configured Atlas connection: empty Chandas snapshot, revision 0 and no collected-total field. No records were changed.
+
+## Chandas optional second language — 16 October 2026
+
+Updated household validation to require at least one English or Telugu name, with both supported. Public display, sorting, insertion previews and confirmation labels use the available name when the selected language is blank. Editor labels/help and validation match the new rule. Existing records and contributions are preserved. Validation passed: formatting, ESLint, TypeScript, all 97 unit tests, production build and all 26 Chandas desktop/mobile browser checks. Tests use mocks; no live database data changed. No commit or push.
+
+## Celebration gallery — 16 October 2026
+
+Implemented the approved public gallery and organiser editor in the Desktop Git project. Supports 60 published JPEG/PNG/WebP photos, original selections up to 7 MB, proportionate browser optimisation to at most 3 MB where needed, and previews at most 200 KB. No captions. Public viewing uses 12-at-a-time loading and a full-viewport photo viewer. Organiser editing includes local previews, removal/Undo, one Save/Cancel, sequential private uploads, progress, confirmed removals, exact retries, expiry recovery and deliberate conflict review.
+
+MongoDB BSON Binary media and gallery references persist across deployments. Snapshot transactions serialize staging and publication; staged photos are never publicly readable. Private staging is bounded at 100 MB with two open 24-hour batches. The new gallery:cleanup command previews reclamation by default and requires paused writes plus explicit --apply for deletion. It has not been applied to live data.
+
+Validation: formatting, ESLint, TypeScript and all 115 unit tests passed; production build passed. All 94 desktop/mobile browser checks passed in the final full regression run. Read-only localhost /api/gallery verification connected to the configured Atlas database successfully and returned zero published photos/revision 0. No sample photos or test records were written to the live database. Desktop, full-screen viewer, 360px grid and editor screenshots were visually inspected using mocked content. Real organiser upload/quality acceptance remains for user review. No commit, push or deployment was performed.
+
+User-approved limit changes and route/storage details are documented in docs/GALLERY_IMPLEMENTATION.md. Existing root DOCX deletions remain unrelated and unstaged.
+
+## Gallery review fixes and commit readiness — 16 October 2026
+
+Fixed cancellation after a lost batch-creation response: attempted creation is tracked separately from acknowledgement, so Cancel abandons the attempted batch ID and releases private staging capacity. Added a regression covering two lost responses, cancellation and a subsequent successful upload.
+
+Verification after this fix: formatting, ESLint, TypeScript, all 115 unit tests, production build and all 22 desktop/mobile gallery browser checks passed. The earlier full browser run passed 94 checks; the complete suite was not rerun after this fix. Tests used mocked/in-memory data and did not modify live Atlas records.
+
+The subsequent independent read-only review found one remaining issue: Sign out → Discard changes revokes authentication before protected gallery batch abandonment. After failed uploads, this can leave batches occupying both staging slots until their 24-hour expiry. The user explicitly accepted deferring this fix to the next deployment. Until fixed, use gallery Cancel before signing out. Public viewing is unaffected by this issue.
+
+The user authorized committing and pushing the current implementation to dev with this known issue deferred. Push success is confirmed separately by the Git operation. Deployment and real organiser upload acceptance remain unverified. The four unrelated root DOCX deletions are excluded from this commit.

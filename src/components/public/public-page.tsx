@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import { CelebrationGallery } from "@/components/gallery/gallery";
+import { Chandas } from "@/components/chandas/chandas";
 import { ScheduleSections } from "@/components/schedule/schedule-sections";
 import { OrganiserAccess, useOrganiserAuth } from "@/components/auth/organiser-auth";
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { PROJECT } from "@/config/project";
 import {
   isLanguage,
@@ -11,7 +13,7 @@ import {
   publicCopy,
   type Language,
 } from "@/lib/i18n/public-copy";
-import { Icon, type IconName } from "./icon";
+import { Icon } from "./icon";
 import { DonationInformation } from "./donation-information";
 import { CelebrationVenue } from "./celebration-venue";
 import { OrganisingCommittee } from "./organising-committee";
@@ -55,35 +57,10 @@ function SectionHeading({
   );
 }
 
-function EmptyState({
-  icon,
-  title,
-  description,
-  children,
-  compact = false,
-}: {
-  icon: IconName;
-  title: string;
-  description?: string;
-  children?: ReactNode;
-  compact?: boolean;
-}) {
-  return (
-    <div className={`${styles.emptyState} ${compact ? styles.compactEmpty : ""}`}>
-      <span className={styles.iconDisc}>
-        <Icon name={icon} />
-      </span>
-      <h3>{title}</h3>
-      {description && <p>{description}</p>}
-      {children}
-    </div>
-  );
-}
-
 export default function PublicPage() {
   const [language, setLanguage] = useState<Language>("en");
   const [selectedDay, setSelectedDay] = useState<number>(16);
-  const [search, setSearch] = useState("");
+
   const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
@@ -391,73 +368,7 @@ export default function PublicPage() {
           />
         </section>
 
-        <section
-          id="chandas"
-          data-page-section
-          className={styles.tintedSection}
-          aria-labelledby="chandas-heading"
-        >
-          <div className={styles.container}>
-            <div id="chandas-heading">
-              <SectionHeading
-                eyebrow={copy.chandasEyebrow}
-                title={copy.chandasTitle}
-                description={copy.chandasDescription}
-              />
-            </div>
-            <p className={styles.notice}>
-              <Icon name="shield" />
-              {copy.verification}
-            </p>
-            <div className={styles.chandasTools}>
-              <div className={styles.searchCard}>
-                <label htmlFor="household-search">{copy.searchLabel}</label>
-                <div className={styles.searchField}>
-                  <Icon name="search" />
-                  <input
-                    id="household-search"
-                    type="search"
-                    autoComplete="off"
-                    placeholder={copy.searchPlaceholder}
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    aria-describedby="search-pending"
-                  />
-                  {search && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearch("");
-                        document.getElementById("household-search")?.focus();
-                      }}
-                      aria-label={copy.clearSearch}
-                    >
-                      <Icon name="close" />
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className={styles.statCard}>
-                <span>{copy.total}</span>
-                <strong>{copy.unavailable}</strong>
-              </div>
-              <div className={styles.statCard}>
-                <span>{copy.lastUpdated}</span>
-                <strong>{copy.notUpdated}</strong>
-              </div>
-            </div>
-            <div className={styles.surface}>
-              <EmptyState
-                icon="book"
-                title={copy.householdsPending}
-                description={copy.householdsDescription}
-              />
-              <p id="search-pending" className={styles.searchNote} role="status">
-                {search ? copy.searchPending : copy.verification}
-              </p>
-            </div>
-          </div>
-        </section>
+        <Chandas language={language} />
 
         <section
           id="donation"
@@ -499,25 +410,7 @@ export default function PublicPage() {
           </section>
         </div>
 
-        <section
-          id="gallery"
-          data-page-section
-          className={styles.tintedSection}
-          aria-labelledby="gallery-heading"
-        >
-          <div className={styles.container}>
-            <div id="gallery-heading">
-              <SectionHeading eyebrow={copy.galleryEyebrow} title={copy.galleryTitle} />
-            </div>
-            <div className={styles.surface}>
-              <EmptyState
-                icon="image"
-                title={copy.photosPending}
-                description={copy.photosDescription}
-              />
-            </div>
-          </div>
-        </section>
+        <CelebrationGallery language={language} />
       </main>
 
       <footer className={styles.footer}>
