@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { venueDetails } from "@/config/venue";
 import type { Language } from "@/lib/i18n/public-copy";
 import { Icon } from "./icon";
@@ -6,8 +7,7 @@ import styles from "./celebration-venue.module.css";
 const text = {
   en: {
     welcome: "Join our community for the Saraswathi Puja celebration in Rittapadu.",
-    photoPending: "Venue photo coming soon",
-    photoDescription: "A photograph of the celebration venue will be added here.",
+    photoAlt: "Saraswathi Puja celebration venue in Rittapadu Village",
     details: "Venue details",
     name: "Venue name",
     address: "Full address",
@@ -18,8 +18,7 @@ const text = {
   },
   te: {
     welcome: "Rittapadu గ్రామ సరస్వతి పూజా వేడుకలకు అందరికీ స్వాగతం.",
-    photoPending: "వేదిక చిత్రం త్వరలో",
-    photoDescription: "ఉత్సవ వేదిక ఫోటో ఇక్కడ జోడించబడుతుంది.",
+    photoAlt: "రిట్టపాడు గ్రామ సరస్వతి పూజా ఉత్సవ వేదిక",
     details: "వేదిక వివరాలు",
     name: "వేదిక పేరు",
     address: "పూర్తి చిరునామా",
@@ -37,12 +36,15 @@ export function CelebrationVenue({ language }: { language: Language }) {
     <div className={styles.venue}>
       <p className={styles.welcome}>{copy.welcome}</p>
       <div className={styles.grid}>
-        <div className={styles.photoPlaceholder}>
-          <span className={styles.motif}>
-            <Icon name="pin" />
-          </span>
-          <h3>{copy.photoPending}</h3>
-          <p>{copy.photoDescription}</p>
+        <div className={styles.photoFrame}>
+          <Image
+            src="/images/rittapadu-venue.jpg"
+            alt={copy.photoAlt}
+            width={2000}
+            height={1125}
+            sizes="(max-width: 700px) 100vw, (max-width: 1200px) 42vw, 560px"
+            className={styles.photo}
+          />
         </div>
         <article className={styles.detailsCard}>
           <h3>

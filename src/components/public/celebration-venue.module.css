@@ -11,44 +11,20 @@
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
   gap: 24px;
 }
-.photoPlaceholder {
+.photoFrame {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 16px;
-  text-align: center;
+  overflow: hidden;
   background: var(--rose);
-  padding: 40px 28px;
-  min-height: 320px;
-  border: 1px dashed var(--line);
+  border: 1px solid var(--line);
   border-radius: 20px;
+  min-width: 0;
 }
-.motif {
-  display: grid;
-  place-items: center;
-  background: #ffe3b3;
-  color: var(--gold);
-  border-radius: 50%;
-  width: 64px;
-  height: 64px;
-}
-.motif svg {
-  width: 30px;
-  height: 30px;
-}
-.photoPlaceholder h3 {
-  color: var(--burgundy);
-  font-family: var(--font-heading);
-  font-size: 26px;
-  line-height: 1.6;
-  margin: 0;
-}
-.photoPlaceholder p {
-  color: var(--muted);
-  line-height: 1.9;
-  margin: 0;
-  max-width: 310px;
+.photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 .detailsCard {
   background: white;
@@ -138,14 +114,6 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 18px;
   }
-  .photoPlaceholder {
-    min-height: 230px;
-    padding: 28px 22px;
-  }
-  .photoPlaceholder h3 {
-    font-size: 23px;
-  }
-  .photoPlaceholder p,
   .welcome {
     font-size: 14px;
   }

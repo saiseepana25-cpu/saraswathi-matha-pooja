@@ -520,3 +520,9 @@ layout and navigation are preserved. Validation passed: formatting, ESLint, Type
 ## Nimajjanam day label — 16 October 2026
 
 18 October is labelled “Nimajjanam day” / “నిమజ్జనం రోజు” beneath the date tab and in the selected schedule details, including puja/prasadam date context. Existing date-card styling is preserved.
+
+## Static venue photograph — 16 October 2026
+
+Replaced the venue coming-soon placeholder with the supplied IMG_4112.HEIC photograph, converted locally to a 2000×1125 JPEG at public/images/rittapadu-venue.jpg. Next Image serves responsive versions with English/Telugu alternative text. The entire landscape photograph fits desktop and mobile without cropping. This is a static asset with no organiser editing or database writes.
+
+Validation: TypeScript, ESLint, production build and both desktop/mobile venue browser checks passed; the browser checks cover image loading and venue directions in English and Telugu. No commit, push or deployment performed.

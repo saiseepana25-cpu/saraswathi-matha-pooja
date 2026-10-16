@@ -217,12 +217,28 @@ test("venue shows confirmed details and the organiser map link in both languages
     await expect(venue).toContainText(
       "Rittapadu village, Vajrapu Kotturu (Mandal), Srikakulam (Dist)",
     );
-    await expect(
-      venue.getByRole("heading", {
-        name: language === "en" ? "Venue photo coming soon" : "వేదిక చిత్రం త్వరలో",
-        exact: true,
-      }),
-    ).toBeVisible();
+    const venuePhoto = venue.getByRole("img", {
+      name:
+        language === "en"
+          ? "Saraswathi Puja celebration venue in Rittapadu Village"
+          : "రిట్టపాడు గ్రామ సరస్వతి పూజా ఉత్సవ వేదిక",
+      exact: true,
+    });
+    await venuePhoto.scrollIntoViewIfNeeded();
+    await expect
+      .poll(() =>
+        venuePhoto.evaluate(
+          (node: HTMLImageElement) => node.complete && node.naturalWidth > 0,
+        ),
+      )
+      .toBe(true);
+    expect(decodeURIComponent((await venuePhoto.getAttribute("src")) ?? "")).toContain(
+      "/images/rittapadu-venue.jpg",
+    );
+    await expect(venuePhoto).toHaveCSS("object-fit", "contain");
+    await expect(venue).not.toContainText(
+      language === "en" ? "Venue photo coming soon" : "వేదిక చిత్రం త్వరలో",
+    );
     const directions = venue.getByRole("link", {
       name: language === "en" ? /Get Directions/ : /మార్గదర్శకాలు పొందండి/,
     });
@@ -232,7 +248,8 @@ test("venue shows confirmed details and the organiser map link in both languages
     );
     await expect(directions).toHaveAttribute("target", "_blank");
     await expect(directions).toHaveAttribute("rel", "noopener noreferrer");
-    await expect(venue.locator("iframe, img")).toHaveCount(0);
+    await expect(venue.locator("iframe")).toHaveCount(0);
+    await expect(venue.getByRole("img")).toHaveCount(1);
     await expect(venue).not.toContainText("[Confirmed");
     await expect(page.locator("#committee")).toContainText("Marpu Kiran");
     await expect(page.locator("#donation")).toContainText("PINNINTI DINESH");

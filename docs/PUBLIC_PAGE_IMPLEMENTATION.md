@@ -115,3 +115,9 @@ change festival programme records or write to MongoDB.
 
 The schedule and bilingual text are in src/lib/announcements.ts. Existing public
 layout and navigation are preserved. Validation passed: formatting, ESLint, TypeScript, all 124 unit tests, production build and all 30 public-page desktop/mobile browser checks. Clock tests cover exact IST midnight, an open paused banner, tab refocus, a non-India browser timezone and reduced-motion readability. No database writes, commit, push or deployment were performed.
+
+## Static venue photograph — 16 October 2026
+
+The supplied IMG_4112.HEIC replaces the venue-photo placeholder. Converted locally to public/images/rittapadu-venue.jpg (2000×1125 JPEG), with responsive Next Image delivery and English/Telugu alternative text. The image retains its complete landscape composition on desktop and mobile. Venue address and directions remain unchanged; the photo is static.
+
+Validation: TypeScript, ESLint, production build and both desktop/mobile venue browser checks passed; the browser checks cover image loading and venue directions in English and Telugu. No commit, push or deployment performed.
